@@ -2,29 +2,46 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(HealthComponent), typeof(Collider2D), typeof(Rigidbody2D)), DisallowMultipleComponent]
+[RequireComponent(typeof(HealthComponent), typeof(Rigidbody2D)), DisallowMultipleComponent]
 public class PlayerController : MonoBehaviour
 {
-    float move = 0f;
+    const float airStrafe = 0.35f;
+    const float landStrafe = 0.1f;
+    [SerializeField] float height = 1f;
+    [SerializeField] float crouchHeight = 0.4f;
+    [SerializeField, Range(0,1)] float crouchSpeed = 0.4f;
+
     bool ground = false;
     bool pauseControl = false;
+    bool crouch = false;
+    bool wasCrouching = false;
+    bool freezeInput = false;
 
-    [Range(0, 100f)]
-    public float speed = 5f;
+    [Range(0, 100f)] public float speed = 5f;
 
-    [Range(0, 100f)]
-    public float jumpForce = 10f;
+    float _moveSmooth = 0.05f;
 
-    public long experience = 0;
+    [SerializeField, Range(0, 100f)] float jumpForce = 10f;
+
+    public long experience { get; private set; } = 0;
     
     [SerializeField] HealthComponent health;
+    [SerializeField, Range(0.01f, 10f)] float ceilingRadius;
+    [SerializeField, Range(0.01f, 5f)] float _groundRadius;
+    [SerializeField] Transform ceilingDetection;
+    [SerializeField] Transform _groundDetection;
     [SerializeField] LayerMask groundMask;
 
     public Action onPlayerDeath;
     public Action<PlayerController> onPlayerInteract;
+    public Action<PlayerController> onPlayerLand;
+    public Action<PlayerController> onPlayerCrouch;
+    public Action<PlayerController> onPlayerStand;
+    public Action<PlayerController> onPlayerAttack;
 
-    Mesh _mesh;
     Rigidbody2D _rb;
+    Vector3 _velocity = Vector3.zero;
+    Vector3 _targetVelocity = Vector3.zero;
 
     GamePlayInputAction _gameplayInputAction;
     InputAction _movement;
@@ -35,7 +52,6 @@ public class PlayerController : MonoBehaviour
     {
         if( health == null )
             health = GetComponent<HealthComponent>() ?? gameObject.AddComponent<HealthComponent>();
-        _mesh = GetComponent<Mesh>();
         _rb = GetComponent<Rigidbody2D>();
 
         _gameplayInputAction = new GamePlayInputAction();
@@ -70,24 +86,17 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        CheckCeiling();
         CheckGround();
-        move = _movement.ReadValue<Vector2>().x;
-        Debug.Log(move);
-        Vector2 _velocity = _rb.velocity;
-        _velocity.x = move * speed;
-        _rb.velocity = _velocity;
+        
+        // if for whatever reason (Stun/bonk/unconscious) we need to be able to control this.
+        if( ground || !pauseControl )
+            Move();
     }
 
-#endregion
+    #endregion
 
-#region Input System Callback
-    
-    void OnMove(InputAction.CallbackContext context )
-    {
-        Vector2 val = context.ReadValue<Vector2>();
-        Debug.Log( val );
-        Move( val.x );
-    }
+    #region Input System Callback
 
     void OnJump( InputAction.CallbackContext context ) => Jump();
 
@@ -102,54 +111,121 @@ public class PlayerController : MonoBehaviour
 
 #endregion
 
+#region Player Implementation
+
     void HandlePlayerDeath() => onPlayerDeath?.Invoke();
+
+    
+    void CheckCeiling()
+    {
+        if( crouch )
+            return;
+        
+        if( Physics2D.OverlapCircle( ceilingDetection.position, ceilingRadius, groundMask))
+            crouch = true;
+    }
+
 
     void CheckGround()
     { 
-        Vector3 feet = transform.position;
-        if( _mesh != null )
-            feet += -transform.up * ( _mesh.bounds.size.y / 2 );
-        Collider2D hit = Physics2D.OverlapCircle( feet, 1f, groundMask, 0, Mathf.Infinity );
-        if( hit ) 
+        bool wasGrounded = ground;
+        ground = false;
+
+        Collider2D[] cols = Physics2D.OverlapCircleAll( _groundDetection.position, _groundRadius, groundMask );
+        foreach( var col in cols )
         {
-            // check and see if we're technically facing down.
-            // for now, we'll cheat a bit and just say that we're grounded.
-            ground = true;
-        }    
-        else
+            if( col.gameObject != gameObject )
+            {
+                ground = true;
+                if( wasGrounded )
+                {
+                    _moveSmooth = landStrafe;
+                    onPlayerLand?.Invoke( this );
+                }
+                return;
+            }
+        }
+
+        if( !wasGrounded )
+            _moveSmooth = airStrafe;
+    }
+
+    void CheckCrouch(Vector2 input)
+    {
+        if( input.y < 0f && !crouch )
         {
-            ground = false;
+            crouch = true;
+            if( !wasCrouching )
+            {
+                wasCrouching = true;
+                onPlayerCrouch?.Invoke(this);
+            }
+            _rb.AddForce( Physics2D.gravity * 0.5f, ForceMode2D.Impulse );
+        }
+        else if( input.y >= 0f && crouch )
+        {
+            crouch = false;
+            if( wasCrouching )
+            {
+                wasCrouching = false;
+                onPlayerStand?.Invoke(this);
+            }
         }
     }
 
-    public void Move( float direction )
+    void Crouch()
     {
-        move = direction;
+        if( crouch )
+        {
+            if( !wasCrouching )
+            {
+                wasCrouching = true;
+                onPlayerCrouch?.Invoke( this );
+            }
+        }
     }
 
-    public void Dash()
+    void Dash()
     {
-
+        // in here we'll somehow simulate the dash animation... Should be interesting!
     }
 
-    public void Slide()
+    void Slide()
     {
-
+        // in here we'll somehow simulate the sliding animation... Should be interesting!
     }
 
-    public void Interact() => onPlayerInteract?.Invoke( this );
+    void Interact() => onPlayerInteract?.Invoke( this );
 
-    public void Melee()
+    void Melee()
     {
-        // play melee animation
+        // play melee animation!
+        onPlayerAttack?.Invoke( this );
     }
 
-    public void Jump()
+    void Move()
+    {
+        Vector2 movement = _movement.ReadValue<Vector2>();
+        float move = movement.x * speed;
+        CheckCrouch( movement );
+
+        if( crouch )
+            move *= crouchSpeed;
+
+        _targetVelocity = _rb.velocity;
+        _targetVelocity.x = move;
+        _targetVelocity.y = Mathf.Max( Physics2D.gravity.y, _targetVelocity.y );
+        _rb.velocity = Vector3.SmoothDamp( _rb.velocity, _targetVelocity, ref _velocity, _moveSmooth);
+    }
+
+    void Jump()
     {
         if( ground )
         {
-            _rb.AddForce( transform.up * jumpForce, ForceMode2D.Impulse );
             ground = false;
+            _rb.AddForce( transform.up * jumpForce, ForceMode2D.Impulse );
         }
     }
+
+    #endregion
 }
