@@ -1,0 +1,3 @@
+idle animation 0-100
+cipher opening 100-130
+cipher closing 130-160
