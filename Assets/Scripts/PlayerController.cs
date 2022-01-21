@@ -7,13 +7,13 @@ public class PlayerController : MonoBehaviour
 {
     const float airStrafe = 0.35f;
     const float landStrafe = 0.1f;
-    [SerializeField] float height = 1f;
-    [SerializeField] float crouchHeight = 0.4f;
+    [SerializeField] BoxCollider2D topCollider;
     [SerializeField, Range(0,1)] float crouchSpeed = 0.4f;
 
     bool ground = false;
     bool pauseControl = false;
     bool crouch = false;
+    bool canStand = true;
     bool wasCrouching = false;
     bool freezeInput = false;
 
@@ -27,9 +27,9 @@ public class PlayerController : MonoBehaviour
     
     [SerializeField] HealthComponent health;
     [SerializeField, Range(0.01f, 10f)] float ceilingRadius;
-    [SerializeField, Range(0.01f, 5f)] float _groundRadius;
+    [SerializeField, Range(0.01f, 5f)] float groundRadius;
     [SerializeField] Transform ceilingDetection;
-    [SerializeField] Transform _groundDetection;
+    [SerializeField] Transform groundDetection;
     [SerializeField] LayerMask groundMask;
 
     public Action onPlayerDeath;
@@ -94,6 +94,21 @@ public class PlayerController : MonoBehaviour
             Move();
     }
 
+    void OnDrawGizmosSelected()
+    {
+        if( groundDetection != null )
+        {
+            Gizmos.color = ground ? Color.green : Color.red;
+            Gizmos.DrawWireSphere( groundDetection.position, groundRadius );
+        }
+
+        if( ceilingDetection != null )
+        {
+            Gizmos.color = canStand ? Color.green : Color.red;
+            Gizmos.DrawWireSphere( ceilingDetection.position, ceilingRadius );
+        }
+    }
+
     #endregion
 
     #region Input System Callback
@@ -115,14 +130,17 @@ public class PlayerController : MonoBehaviour
 
     void HandlePlayerDeath() => onPlayerDeath?.Invoke();
 
-    
     void CheckCeiling()
     {
-        if( crouch )
-            return;
-        
+        // if( crouch )
+        //     return;
+            
+        canStand = true;
         if( Physics2D.OverlapCircle( ceilingDetection.position, ceilingRadius, groundMask))
+        {
+            canStand = false;
             crouch = true;
+        }
     }
 
 
@@ -131,7 +149,7 @@ public class PlayerController : MonoBehaviour
         bool wasGrounded = ground;
         ground = false;
 
-        Collider2D[] cols = Physics2D.OverlapCircleAll( _groundDetection.position, _groundRadius, groundMask );
+        Collider2D[] cols = Physics2D.OverlapCircleAll( groundDetection.position, groundRadius, groundMask );
         foreach( var col in cols )
         {
             if( col.gameObject != gameObject )
@@ -158,16 +176,20 @@ public class PlayerController : MonoBehaviour
             if( !wasCrouching )
             {
                 wasCrouching = true;
+                if( topCollider != null )
+                    topCollider.enabled = false;
                 onPlayerCrouch?.Invoke(this);
             }
             _rb.AddForce( Physics2D.gravity * 0.5f, ForceMode2D.Impulse );
         }
-        else if( input.y >= 0f && crouch )
+        else if( input.y >= 0f && crouch && canStand )
         {
             crouch = false;
             if( wasCrouching )
             {
                 wasCrouching = false;
+                if( topCollider != null )
+                    topCollider.enabled = true;
                 onPlayerStand?.Invoke(this);
             }
         }
@@ -220,10 +242,13 @@ public class PlayerController : MonoBehaviour
 
     void Jump()
     {
-        if( ground )
+        if( ground && !crouch )
         {
+            RaycastHit2D hit = Physics2D.CircleCast( groundDetection.position, groundRadius, -transform.up, Mathf.Infinity, groundMask ); 
             ground = false;
-            _rb.AddForce( transform.up * jumpForce, ForceMode2D.Impulse );
+            Vector2 hitPointNormal = ( (Vector2)groundDetection.position - hit.point ).normalized;
+            Vector2 jumpDir = ( Vector2.up + hitPointNormal ).normalized;
+            _rb.AddForce( jumpDir * jumpForce, ForceMode2D.Impulse );
         }
     }
 
