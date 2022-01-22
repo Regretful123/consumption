@@ -23,7 +23,7 @@ light explosion
 (we will need a flashing effect when the skill is executed and maybe some circular white particles coming out of the character)
 (consumes 10% light/hp to stun the enemy for 1-2 secs)
 
-file:
+file:character_getting_hit
 geting hit
 
 file:
