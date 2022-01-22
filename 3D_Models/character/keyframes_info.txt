@@ -29,5 +29,5 @@ geting hit
 file:
 crouch
 
-file:
+file:character_death
 death
