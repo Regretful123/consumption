@@ -1,14 +1,17 @@
 using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(HealthComponent), typeof(Rigidbody2D)), DisallowMultipleComponent]
-public class PlayerController : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D)), DisallowMultipleComponent]
+public class PlayerController : MonoBehaviour, IDamagable
 {
     const float airStrafe = 0.35f;
     const float landStrafe = 0.1f;
     [SerializeField] BoxCollider2D topCollider;
     [SerializeField, Range(0,1)] float crouchSpeed = 0.4f;
+    [SerializeField] Transform _displayMesh;
+    [SerializeField] int startingHealth = 100;
 
     bool ground = false;
     bool pauseControl = false;
@@ -24,20 +27,24 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Range(0, 100f)] float jumpForce = 10f;
 
     public long experience { get; private set; } = 0;
-    
-    [SerializeField] HealthComponent health;
+
+    Health _health;
+    public Health health { get => _health; private set => _health = value; }
+
     [SerializeField, Range(0.01f, 10f)] float ceilingRadius;
     [SerializeField, Range(0.01f, 5f)] float groundRadius;
     [SerializeField] Transform ceilingDetection;
     [SerializeField] Transform groundDetection;
     [SerializeField] LayerMask groundMask;
 
-    public Action onPlayerDeath;
     public Action<PlayerController> onPlayerInteract;
     public Action<PlayerController> onPlayerLand;
     public Action<PlayerController> onPlayerCrouch;
     public Action<PlayerController> onPlayerStand;
     public Action<PlayerController> onPlayerAttack;
+
+    public UnityEventInt onPlayerHealthChanged;
+    public UnityEvent onPlayerDeath;
 
     Rigidbody2D _rb;
     Vector3 _velocity = Vector3.zero;
@@ -48,10 +55,13 @@ public class PlayerController : MonoBehaviour
 
 #region Unity event
 
+    void Awake()
+    {
+        _health = new Health( startingHealth );
+    }
+
     void Start()
     {
-        if( health == null )
-            health = GetComponent<HealthComponent>() ?? gameObject.AddComponent<HealthComponent>();
         _rb = GetComponent<Rigidbody2D>();
 
         _gameplayInputAction = new GamePlayInputAction();
@@ -238,6 +248,16 @@ public class PlayerController : MonoBehaviour
         _targetVelocity.x = move;
         _targetVelocity.y = Mathf.Max( Physics2D.gravity.y, _targetVelocity.y );
         _rb.velocity = Vector3.SmoothDamp( _rb.velocity, _targetVelocity, ref _velocity, _moveSmooth);
+
+        if( _displayMesh != null )
+        {
+            Vector3 _scale = _displayMesh.localScale;
+            if( ( _scale.x > 0 && move < 0 ) || ( _scale.x < 0 && move > 0 ) )
+            {
+                _scale.x *= -1;
+                _displayMesh.localScale = _scale;
+            }
+        }
     }
 
     void Jump()
@@ -251,6 +271,10 @@ public class PlayerController : MonoBehaviour
             _rb.AddForce( jumpDir * jumpForce, ForceMode2D.Impulse );
         }
     }
+
+    public void OnHurt( int damages ) => health.OnHurt( damages );
+
+    public void OnHeal( int heal ) => health.OnHeal( heal );
 
     #endregion
 }
