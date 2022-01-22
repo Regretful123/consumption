@@ -12,10 +12,11 @@ file: character_walk
 walk
 
 file: character_run
-run
+run (set animation to play at 2x)
 
 file: character_dash
-dash - backwards dash/dodge (frames 1-10)
+dash (sword_absorbs_low_health_enemy)
+backwards dash/dodge (frames 1-10)
 
 light explosion
 crouch
