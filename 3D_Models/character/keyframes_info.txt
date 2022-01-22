@@ -1,3 +1,4 @@
+file:character-anim-test
 0-200 idle
 200-230 - jump
 230-266 -jump decent (maybe not usable)
@@ -6,9 +7,16 @@
 352-363 - parry
 363-382 - attack1
 382-401 - attack2
-401-461 - walk
+
+file: character_walk
+walk
+
+file: character_run
 run
-dash
+
+file: character_dash
+dash - backwards dash/dodge (frames 1-10)
+
 light explosion
 crouch
 death
