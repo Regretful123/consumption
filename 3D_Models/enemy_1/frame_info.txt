@@ -1,0 +1,14 @@
+file:torso_enemy_idle
+idle
+
+file:torso_enemy_walk
+walk
+
+file:torso_enemy_lunge_attack
+attack
+0-15 wind up
+15_30 jump
+30-50 air
+30-0 (reverse) reconect with the ground
+
+
