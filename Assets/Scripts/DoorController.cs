@@ -32,6 +32,7 @@ public abstract class Door : MonoBehaviour
             {
                 InputAction _interact = _controller.GetGamePlayInputAction().Gameplay.Interact;
                 _interact.performed += HandlePlayerInteract;
+                _interact.Enable();
                 _inTrigger.Add( _interact );
             }
         }
@@ -48,6 +49,7 @@ public abstract class Door : MonoBehaviour
                 if( _inTrigger.Contains( _interact ))
                 {
                     _interact.performed -= HandlePlayerInteract;
+                    _interact.Disable();
                     _inTrigger.Remove( _interact );
                 }
             }
