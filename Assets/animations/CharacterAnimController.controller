@@ -376,7 +376,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: horizontalMovement
     m_Mirror: 0
-  m_BlendParameter: horizontalMovement
+  m_BlendParameter: horizontal
   m_BlendParameterY: horizontalMovement
   m_MinThreshold: -1
   m_MaxThreshold: 1
@@ -417,7 +417,13 @@ AnimatorController:
   m_Name: CharacterAnimController
   serializedVersion: 5
   m_AnimatorParameters:
-  - m_Name: horizontalMovement
+  - m_Name: horizontal
+    m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 0}
+  - m_Name: vertical
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -425,12 +431,6 @@ AnimatorController:
     m_Controller: {fileID: 0}
   - m_Name: isParry
     m_Type: 4
-    m_DefaultFloat: 0
-    m_DefaultInt: 0
-    m_DefaultBool: 0
-    m_Controller: {fileID: 0}
-  - m_Name: vertical
-    m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
@@ -602,19 +602,19 @@ AnimatorStateMachine:
     m_Position: {x: 580, y: -180, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 2691979797297279542}
-    m_Position: {x: 820, y: -130, z: 0}
+    m_Position: {x: 820, y: -120, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -2915671932411477692}
     m_Position: {x: 580, y: 0, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 2024159447631011088}
-    m_Position: {x: 820, y: -60, z: 0}
+    m_Position: {x: 820, y: -50, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -4708667223725831882}
-    m_Position: {x: 300, y: -50, z: 0}
+    m_Position: {x: 300, y: -80, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6561836586891143427}
-    m_Position: {x: 300, y: -140, z: 0}
+    m_Position: {x: 300, y: -170, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -674,7 +674,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: horizontalMovement
     m_Mirror: 0
-  m_BlendParameter: horizontalMovement
+  m_BlendParameter: horizontal
   m_BlendParameterY: Blend
   m_MinThreshold: 0
   m_MaxThreshold: 1

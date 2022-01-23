@@ -53,6 +53,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     GamePlayInputAction _gameplayInputAction;
     InputAction _movement;
+    bool hasStarted = false;
     public GamePlayInputAction GetGamePlayInputAction() => _gameplayInputAction;
 
 #region Unity event
@@ -60,42 +61,27 @@ public class PlayerController : MonoBehaviour, IDamagable
     void Awake()
     {
         _health = new Health( startingHealth );
+        _gameplayInputAction  = new GamePlayInputAction();
+        _movement = _gameplayInputAction.Gameplay.Move;
     }
 
     void Start()
     {
+        hasStarted = true;
+        EnableInput();
         _rb = GetComponent<Rigidbody2D>();
-        _gameplayInputAction = new GamePlayInputAction();
-
-        _movement = _gameplayInputAction.Gameplay.Move;
-        _movement.Enable();
-        _gameplayInputAction.Gameplay.Jump.performed += OnJump;
-        _gameplayInputAction.Gameplay.Jump.Enable();
-        _gameplayInputAction.Gameplay.Attack.performed += OnAttack;
-        _gameplayInputAction.Gameplay.Attack.Enable();
-        _gameplayInputAction.Gameplay.Dash.performed += OnDash;
-        _gameplayInputAction.Gameplay.Dash.Enable();
-        _gameplayInputAction.Gameplay.Interact.performed += OnInteract;
-        _gameplayInputAction.Gameplay.Interact.Enable();
-        _gameplayInputAction.Gameplay.Explosion.performed += OnExplosion;
-        _gameplayInputAction.Gameplay.Explosion.Enable();
-        _health.onHealthDepleted += HandlePlayerDeath;
+        AttachHooks();
     }
 
-    void OnDestroy()
+    void OnEnable()
     {
-        _gameplayInputAction.Gameplay.Jump.performed -= OnJump;
-        _gameplayInputAction.Gameplay.Jump.Disable();
-        _gameplayInputAction.Gameplay.Attack.performed -= OnAttack;
-        _gameplayInputAction.Gameplay.Attack.Disable();
-        _gameplayInputAction.Gameplay.Dash.performed -= OnDash;
-        _gameplayInputAction.Gameplay.Dash.Disable();
-        _gameplayInputAction.Gameplay.Interact.performed -= OnInteract;
-        _gameplayInputAction.Gameplay.Interact.Disable();
-        _gameplayInputAction.Gameplay.Explosion.performed -= OnExplosion;
-        _gameplayInputAction.Gameplay.Explosion.Disable();
-        _health.onHealthDepleted -= HandlePlayerDeath;
+        if( !hasStarted )
+            return;
+        EnableInput();
     }
+
+    void OnDisable() => DisableInput();
+    void OnDestroy() => DetachHooks();
 
     void FixedUpdate()
     {
@@ -123,6 +109,51 @@ public class PlayerController : MonoBehaviour, IDamagable
     }
 
     #endregion
+
+#region private implementation
+
+    void EnableInput()
+    {
+        _movement.Enable();
+        _gameplayInputAction.Gameplay.Jump.Enable();
+        _gameplayInputAction.Gameplay.Attack.Enable();
+        _gameplayInputAction.Gameplay.Dash.Enable();
+        _gameplayInputAction.Gameplay.Interact.Enable();
+        _gameplayInputAction.Gameplay.Explosion.Enable();
+    }
+
+    void DisableInput()
+    {
+        _movement.Disable();
+        _gameplayInputAction.Gameplay.Jump.Disable();
+        _gameplayInputAction.Gameplay.Attack.Disable();
+        _gameplayInputAction.Gameplay.Dash.Disable();
+        _gameplayInputAction.Gameplay.Interact.Disable();
+        _gameplayInputAction.Gameplay.Explosion.Disable();
+    }
+
+    void AttachHooks()
+    {
+        _gameplayInputAction.Gameplay.Jump.performed += OnJump;
+        _gameplayInputAction.Gameplay.Attack.performed += OnAttack;
+        _gameplayInputAction.Gameplay.Dash.performed += OnDash;
+        _gameplayInputAction.Gameplay.Interact.performed += OnInteract;
+        _gameplayInputAction.Gameplay.Explosion.performed += OnExplosion;
+        _health.onHealthDepleted += HandlePlayerDeath;
+    }
+
+    void DetachHooks()
+    {
+        _gameplayInputAction.Gameplay.Jump.performed -= OnJump;
+        _gameplayInputAction.Gameplay.Attack.performed -= OnAttack;
+        _gameplayInputAction.Gameplay.Dash.performed -= OnDash;
+        _gameplayInputAction.Gameplay.Interact.performed -= OnInteract;
+        _gameplayInputAction.Gameplay.Explosion.performed -= OnExplosion;
+        _health.onHealthDepleted -= HandlePlayerDeath;
+    }
+
+#endregion
+
 
     #region Input System Callback
 
@@ -236,11 +267,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     void Interact() => onPlayerInteract?.Invoke( this );
 
-    void Melee()
-    {
-        // play melee animation!
-        onPlayerAttack?.Invoke( this );
-    }
+    void Melee() => onPlayerAttack?.Invoke( this );
 
     void Parry() => onPlayerParry?.Invoke( this );
 
@@ -257,17 +284,7 @@ public class PlayerController : MonoBehaviour, IDamagable
         _targetVelocity.x = move;
         _targetVelocity.y = Mathf.Max( Physics2D.gravity.y, _targetVelocity.y );
         _rb.velocity = Vector3.SmoothDamp( _rb.velocity, _targetVelocity, ref _velocity, _moveSmooth);
-
-        // if( _displayMesh != null )
-        // {
-        //     Vector3 _scale = _displayMesh.localScale;
-        //     if( ( _scale.x > 0 && move < 0 ) || ( _scale.x < 0 && move > 0 ) )
-        //     {
-        //         _scale.x *= -1;
-        //         _displayMesh.localScale = _scale;
-        //     }
-        // }
-        
+     
         Vector3 _scale = transform.localScale;
         if( ( _scale.x > 0 && move < 0 ) || ( _scale.x < 0 && move > 0 ) )
         {

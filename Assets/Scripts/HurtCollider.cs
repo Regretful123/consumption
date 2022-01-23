@@ -26,10 +26,11 @@ public class HurtCollider : MonoBehaviour
         // disable render if requested
         if( !_isVisible && TryGetComponent<Renderer>(out Renderer _render ))
             _render.enabled = false;
+
         _dot = new WaitForSeconds( _damageOverTime );
     }
 
-    void OnEnable() => StartCoroutine(ApplyDamage());
+    // void OnEnable() => StartCoroutine(ApplyDamage());
     void OnDisable() => StopAllCoroutines();
     
     void OnTriggerEnter2D(Collider2D other )
@@ -64,6 +65,9 @@ public class HurtCollider : MonoBehaviour
         
         target.health.onHealthDepleted += HandleHealthDepleted;
         _affected.Add( target );
+
+        if( _affected.Count == 1 )
+            StartCoroutine(ApplyDamage());
     }
 
     void HandleRemovingTargetFromDamagePool( IDamagable target )
@@ -73,6 +77,9 @@ public class HurtCollider : MonoBehaviour
 
         target.health.onHealthDepleted -= HandleHealthDepleted;
         _affected.Remove( target );
+
+        if( _affected.Count == 0 )
+            StopAllCoroutines();
     }
 
 #endregion
@@ -99,8 +106,8 @@ public class HurtCollider : MonoBehaviour
             while( _affected.Count == 0 )
                 yield return null;
             yield return _dot;
-            foreach( var target in _affected )
-                target?.OnHurt(_damage);
+            for( int i = 0, c = _affected.Count; i<c; ++i )
+                _affected.ElementAt(i)?.OnHurt(_damage);
         }
     }
 

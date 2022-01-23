@@ -15,7 +15,6 @@ public class CharacterAnimController : MonoBehaviour
     int groundHash = Animator.StringToHash("isGround");
     int attackHash = Animator.StringToHash("isAttacking");
 
-
     // Start is called before the first frame update
     void Start()
     {
@@ -28,10 +27,28 @@ public class CharacterAnimController : MonoBehaviour
             this.enabled = false;
             return;
         }
-        _controller.onPlayerAttack += HandlePlayerAttack;
-        _controller.onPlayerLand += HandlePlayerLand;
-        _controller.onPlayerHealthChanged.AddListener( HandlePlayerHealth );
+        
+        _controller.onPlayerAttack += HandleAttack;
+        _controller.onPlayerParry += HandleParry;
+        _controller.onPlayerLand += HandleLand;
+
+        // _controller.onPlayerHealthChanged.AddListener( HandlePlayerHealth );
         // _controller.onPlayerCrouch += HandlePlayerCrouch;
+    }
+
+    void OnDestroy()
+    {
+        if( _controller != null )
+        {
+            _controller.onPlayerAttack -= HandleAttack;
+            _controller.onPlayerParry -= HandleParry;
+            _controller.onPlayerLand -= HandleLand;
+        }
+    }
+
+    private void HandleParry(PlayerController obj)
+    {
+        _anim.SetBool( parryHash, true );
     }
 
     private void HandlePlayerHealth( int newHealth )
@@ -39,13 +56,12 @@ public class CharacterAnimController : MonoBehaviour
         // maybe a different animation could be played here?
     }
 
-    private void HandlePlayerAttack(PlayerController obj)
-    {
-        _anim.SetBool( attackHash, true );
-    }
+    void HandleAttack( PlayerController obj ) => _anim.SetBool( attackHash, true );
 
-    private void HandlePlayerLand(PlayerController obj)
-    {
-        throw new NotImplementedException();
-    }
+    void HandleLand(PlayerController obj) => _anim.SetBool( groundHash, true );
+
+    // private void HandlePlayerCrouch(PlayerController obj)
+    // {
+    //     _anim.SetBool();
+    // }
 }
