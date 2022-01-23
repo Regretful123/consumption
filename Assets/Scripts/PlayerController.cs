@@ -10,7 +10,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     const float landStrafe = 0.1f;
     [SerializeField] BoxCollider2D topCollider;
     [SerializeField, Range(0,1)] float crouchSpeed = 0.4f;
-    [SerializeField] Transform _displayMesh;
+    // [SerializeField] Transform _displayMesh;
     [SerializeField] int startingHealth = 100;
 
     bool ground = false;
@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     public long experience { get; private set; } = 0;
 
     Health _health;
-    public Health health { get => _health; private set => _health = value; }
+    public Health health { get => _health; }
 
     [SerializeField, Range(0.01f, 10f)] float ceilingRadius;
     [SerializeField, Range(0.01f, 5f)] float groundRadius;
@@ -42,6 +42,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     public Action<PlayerController> onPlayerCrouch;
     public Action<PlayerController> onPlayerStand;
     public Action<PlayerController> onPlayerAttack;
+    public Action<PlayerController> onPlayerParry;
 
     public UnityEventInt onPlayerHealthChanged;
     public UnityEvent onPlayerDeath;
@@ -52,6 +53,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     GamePlayInputAction _gameplayInputAction;
     InputAction _movement;
+    public GamePlayInputAction GetGamePlayInputAction() => _gameplayInputAction;
 
 #region Unity event
 
@@ -63,7 +65,6 @@ public class PlayerController : MonoBehaviour, IDamagable
     void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
-
         _gameplayInputAction = new GamePlayInputAction();
 
         _movement = _gameplayInputAction.Gameplay.Move;
@@ -74,24 +75,26 @@ public class PlayerController : MonoBehaviour, IDamagable
         _gameplayInputAction.Gameplay.Attack.Enable();
         _gameplayInputAction.Gameplay.Dash.performed += OnDash;
         _gameplayInputAction.Gameplay.Dash.Enable();
+        _gameplayInputAction.Gameplay.Interact.performed += OnInteract;
+        _gameplayInputAction.Gameplay.Interact.Enable();
         _gameplayInputAction.Gameplay.Explosion.performed += OnExplosion;
         _gameplayInputAction.Gameplay.Explosion.Enable();
-
-        health.onHealthDepleted += HandlePlayerDeath;
+        _health.onHealthDepleted += HandlePlayerDeath;
     }
 
     void OnDestroy()
     {
-        if( health != null )
-            health.onHealthDepleted -= HandlePlayerDeath;
         _gameplayInputAction.Gameplay.Jump.performed -= OnJump;
-        _gameplayInputAction.Gameplay.Jump.Enable();
+        _gameplayInputAction.Gameplay.Jump.Disable();
         _gameplayInputAction.Gameplay.Attack.performed -= OnAttack;
-        _gameplayInputAction.Gameplay.Attack.Enable();
+        _gameplayInputAction.Gameplay.Attack.Disable();
         _gameplayInputAction.Gameplay.Dash.performed -= OnDash;
-        _gameplayInputAction.Gameplay.Dash.Enable();
+        _gameplayInputAction.Gameplay.Dash.Disable();
+        _gameplayInputAction.Gameplay.Interact.performed -= OnInteract;
+        _gameplayInputAction.Gameplay.Interact.Disable();
         _gameplayInputAction.Gameplay.Explosion.performed -= OnExplosion;
-        _gameplayInputAction.Gameplay.Explosion.Enable();
+        _gameplayInputAction.Gameplay.Explosion.Disable();
+        _health.onHealthDepleted -= HandlePlayerDeath;
     }
 
     void FixedUpdate()
@@ -134,11 +137,15 @@ public class PlayerController : MonoBehaviour, IDamagable
         // throw new NotImplementedException();
     }
 
+    void OnInteract( InputAction.CallbackContext context ) => Interact();
+
+    void OnParry( InputAction.CallbackContext context ) => Parry();
+
 #endregion
 
 #region Player Implementation
 
-    void HandlePlayerDeath() => onPlayerDeath?.Invoke();
+    void HandlePlayerDeath( Health health ) => onPlayerDeath?.Invoke();
 
     void CheckCeiling()
     {
@@ -235,6 +242,8 @@ public class PlayerController : MonoBehaviour, IDamagable
         onPlayerAttack?.Invoke( this );
     }
 
+    void Parry() => onPlayerParry?.Invoke( this );
+
     void Move()
     {
         Vector2 movement = _movement.ReadValue<Vector2>();
@@ -249,14 +258,21 @@ public class PlayerController : MonoBehaviour, IDamagable
         _targetVelocity.y = Mathf.Max( Physics2D.gravity.y, _targetVelocity.y );
         _rb.velocity = Vector3.SmoothDamp( _rb.velocity, _targetVelocity, ref _velocity, _moveSmooth);
 
-        if( _displayMesh != null )
+        // if( _displayMesh != null )
+        // {
+        //     Vector3 _scale = _displayMesh.localScale;
+        //     if( ( _scale.x > 0 && move < 0 ) || ( _scale.x < 0 && move > 0 ) )
+        //     {
+        //         _scale.x *= -1;
+        //         _displayMesh.localScale = _scale;
+        //     }
+        // }
+        
+        Vector3 _scale = transform.localScale;
+        if( ( _scale.x > 0 && move < 0 ) || ( _scale.x < 0 && move > 0 ) )
         {
-            Vector3 _scale = _displayMesh.localScale;
-            if( ( _scale.x > 0 && move < 0 ) || ( _scale.x < 0 && move > 0 ) )
-            {
-                _scale.x *= -1;
-                _displayMesh.localScale = _scale;
-            }
+            _scale.x *= -1;
+            transform.localScale = _scale;
         }
     }
 
@@ -272,9 +288,9 @@ public class PlayerController : MonoBehaviour, IDamagable
         }
     }
 
-    public void OnHurt( int damages ) => health.OnHurt( damages );
+    public void OnHurt( int damages ) => _health.OnHurt( damages );
 
-    public void OnHeal( int heal ) => health.OnHeal( heal );
+    public void OnHeal( int heal ) => _health.OnHeal( heal );
 
     #endregion
 }

@@ -43,9 +43,5 @@ public class HealthIndicator : MonoBehaviour
 
     private void HandleHealthChanged(int value) => _slider.value = (float)value / _playerController.health.maxHealth;
 
-    private void HandleHealthDepleted()
-    {
-        // do soemthing interesting? for now disable it...
-        _slider.gameObject.SetActive(false);
-    }
+    private void HandleHealthDepleted( Health health ) => _slider.gameObject.SetActive(false);
 }

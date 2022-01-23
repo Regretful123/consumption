@@ -4,7 +4,7 @@ using UnityEngine;
 
 public interface IDamagable
 {
-    Health health { get; }
+    public Health health { get; }
     void OnHurt( int damages );
     void OnHeal( int heal );
 }

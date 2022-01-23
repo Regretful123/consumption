@@ -23,7 +23,7 @@ public class Health : IHealth
             {
                 _health = _val;
                 if( _health == 0 )
-                    onHealthDepleted?.Invoke();
+                    onHealthDepleted?.Invoke( this );
                 onHealthChanged?.Invoke( _health );
             }
         } 
@@ -36,7 +36,7 @@ public class Health : IHealth
         this._maxHealth = initialHealth;
     }
     public event Action<int> onHealthChanged;
-    public event Action onHealthDepleted;
+    public event Action<Health> onHealthDepleted;
     public int currentHealth => _health;
     public int maxHealth => _maxHealth;
     public void OnHurt( int impact ) => health -= impact;
@@ -77,8 +77,8 @@ public class HealthComponent : MonoBehaviour
 
 #region Handlers
 
-    void HandleHealthDepleted() => onHealthDepleted?.Invoke();
-    void HandleHealthChanged(int value) => onHealthChanged?.Invoke(value);
+    void HandleHealthDepleted( Health health ) => onHealthDepleted?.Invoke();
+    void HandleHealthChanged( int value ) => onHealthChanged?.Invoke(value);
 
 #endregion
 

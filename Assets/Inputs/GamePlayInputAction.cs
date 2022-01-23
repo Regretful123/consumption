@@ -71,6 +71,15 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Interact"",
+                    ""type"": ""Button"",
+                    ""id"": ""d163067e-0978-404f-b880-3b1931bb1b09"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -183,6 +192,17 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
                     ""action"": ""Explosion"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""44ef51e0-074c-4508-8bf1-22a9c256958c"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -196,6 +216,7 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
         m_Gameplay_Attack = m_Gameplay.FindAction("Attack", throwIfNotFound: true);
         m_Gameplay_Dash = m_Gameplay.FindAction("Dash", throwIfNotFound: true);
         m_Gameplay_Explosion = m_Gameplay.FindAction("Explosion", throwIfNotFound: true);
+        m_Gameplay_Interact = m_Gameplay.FindAction("Interact", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -260,6 +281,7 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_Attack;
     private readonly InputAction m_Gameplay_Dash;
     private readonly InputAction m_Gameplay_Explosion;
+    private readonly InputAction m_Gameplay_Interact;
     public struct GameplayActions
     {
         private @GamePlayInputAction m_Wrapper;
@@ -269,6 +291,7 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
         public InputAction @Attack => m_Wrapper.m_Gameplay_Attack;
         public InputAction @Dash => m_Wrapper.m_Gameplay_Dash;
         public InputAction @Explosion => m_Wrapper.m_Gameplay_Explosion;
+        public InputAction @Interact => m_Wrapper.m_Gameplay_Interact;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -293,6 +316,9 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
                 @Explosion.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnExplosion;
                 @Explosion.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnExplosion;
                 @Explosion.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnExplosion;
+                @Interact.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnInteract;
+                @Interact.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnInteract;
+                @Interact.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnInteract;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -312,6 +338,9 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
                 @Explosion.started += instance.OnExplosion;
                 @Explosion.performed += instance.OnExplosion;
                 @Explosion.canceled += instance.OnExplosion;
+                @Interact.started += instance.OnInteract;
+                @Interact.performed += instance.OnInteract;
+                @Interact.canceled += instance.OnInteract;
             }
         }
     }
@@ -323,5 +352,6 @@ public partial class @GamePlayInputAction : IInputActionCollection2, IDisposable
         void OnAttack(InputAction.CallbackContext context);
         void OnDash(InputAction.CallbackContext context);
         void OnExplosion(InputAction.CallbackContext context);
+        void OnInteract(InputAction.CallbackContext context);
     }
 }

@@ -3,13 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Collider2D)), DisallowMultipleComponent]
 public abstract class Door : MonoBehaviour
 {
     bool _isOpen = false;
+    bool _fireOnce = false;
+    bool _hasFired = false;
+    bool _stayOpen = false;
     public bool IsOpen() => _isOpen;
-    HashSet<GameObject> _inTrigger = new HashSet<GameObject>();
+    HashSet<InputAction> _inTrigger = new HashSet<InputAction>();
 
     void Start()
     {
@@ -17,20 +21,18 @@ public abstract class Door : MonoBehaviour
             _col.isTrigger = true;
     }
 
-    public virtual void OnOpen() { Debug.Log("Open"); }
-    public virtual void OnClose() { Debug.Log("Close"); }
+    public virtual void OnOpen() { }
+    public virtual void OnClose() { }
 
     public void OnTriggerEnter2D( Collider2D other )
     {
         if( other.CompareTag("Player"))
         {
-            _inTrigger.Add( other.gameObject );
-
-            // for now handle when the player enter
-            if( !_isOpen )
+            if( TryGetComponent<PlayerController>(out PlayerController _controller ))
             {
-                _isOpen = true;
-                OnOpen();
+                InputAction _interact = _controller.GetGamePlayInputAction().Gameplay.Interact;
+                _interact.performed += HandlePlayerInteract;
+                _inTrigger.Add( _interact );
             }
         }
     }
@@ -40,14 +42,41 @@ public abstract class Door : MonoBehaviour
         if( other.CompareTag("Player"))
         {
             // for now handle when the player exit.
-            _inTrigger.Remove( other.gameObject );
+            if( TryGetComponent<PlayerController>(out PlayerController _controller ))
+            {
+                InputAction _interact = _controller.GetGamePlayInputAction().Gameplay.Interact;
+                if( _inTrigger.Contains( _interact ))
+                {
+                    _interact.performed -= HandlePlayerInteract;
+                    _inTrigger.Remove( _interact );
+                }
+            }
 
-            if( _inTrigger.Count == 0 && _isOpen )
+            if( !_stayOpen && _inTrigger.Count == 0 && _isOpen )
             {
                 _isOpen = false;
                 OnClose();
             }
         }
+    }
+
+    void HandlePlayerInteract(InputAction.CallbackContext context )
+    {
+        // for now handle when the player enter
+        if( !_isOpen && ( ( _fireOnce && !_hasFired ) || ( !_fireOnce ) )  )
+        {
+            _hasFired = true;
+            _isOpen = true;
+            OnOpen();
+        }
+    }
+
+    // if the gameobject becomes disable, we need to make sure we free all of the handler reference.
+    void OnDisable()
+    {
+        foreach( var target in _inTrigger )
+            target.performed -= HandlePlayerInteract;
+        _inTrigger.Clear();
     }
 }
 
