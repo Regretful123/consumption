@@ -1,23 +1,20 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public interface IState
 {
-    void OnEnter();
+    IEnumerator Init();
     void Execute();
-    void OnExit();
+    void FixedExecute();
 }
 
-[Serializable]
-public abstract class State : MonoBehaviour, IState 
+public abstract class State : IState 
 {
-    public Action onEnter;
-    public Action onExit;
-    protected StateMachine _stateMachine;
-    public State( StateMachine stateMachine ) => _stateMachine = stateMachine;
-    public StateMachine stateMachine { get => _stateMachine; }
-    public virtual void Init( StateMachine machine ) => this._stateMachine = machine;
-    public virtual void OnEnter() => onEnter?.Invoke();
-    public virtual void OnExit() => onExit?.Invoke();
-    public abstract void Execute();
+    protected StateMachine machine;
+    public State( StateMachine stateMachine ) => machine = stateMachine;
+    public StateMachine stateMachine => machine;
+    public virtual IEnumerator Init() { yield break; }
+    public virtual void Execute() { }
+    public virtual void FixedExecute() { }
 }
