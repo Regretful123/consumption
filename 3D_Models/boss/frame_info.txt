@@ -1,0 +1,31 @@
+tentacle
+file: tentacle
+0-120 opening
+125-215 idle
+215-315 ground slam
+315-426 tentacle swipe
+
+
+light portal tentacle
+file:light_portal_and_tentacle
+0-10 portal opens
+10-210 portal idle spin
+210-220 portal closes
+40-200 tentacle emerges and retracts
+
+(light_portal_alpha)just use this file for 
+transparency on the portals and add the glowing white material 
+we have for everything else if you need the alpha made 
+into an other format just let me know
+
+head
+file:boss_head
+0-121 opening
+121-361 idle
+361-445 roar and head slam
+
+
+
+ignore the boss_anim files it was a test 
+in case we where to use the character as a boss 
+with some changes
