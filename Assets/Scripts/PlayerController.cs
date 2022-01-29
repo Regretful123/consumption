@@ -41,8 +41,8 @@ public class PlayerController : MonoBehaviour, IDamagable
     public Action<PlayerController> onPlayerLand;
     public Action<PlayerController> onPlayerCrouch;
     public Action<PlayerController> onPlayerStand;
-    public Action<PlayerController> onPlayerAttack;
-    public Action<PlayerController> onPlayerParry;
+    public Action<PlayerController, bool> onPlayerAttack;
+    public Action<PlayerController, bool> onPlayerParry;
 
     public UnityEventInt onPlayerHealthChanged;
     public UnityEvent onPlayerDeath;
@@ -120,6 +120,7 @@ public class PlayerController : MonoBehaviour, IDamagable
         _gameplayInputAction.Gameplay.Dash.Enable();
         _gameplayInputAction.Gameplay.Interact.Enable();
         _gameplayInputAction.Gameplay.Explosion.Enable();
+        _gameplayInputAction.Gameplay.Parry.Enable();
     }
 
     void DisableInput()
@@ -130,25 +131,32 @@ public class PlayerController : MonoBehaviour, IDamagable
         _gameplayInputAction.Gameplay.Dash.Disable();
         _gameplayInputAction.Gameplay.Interact.Disable();
         _gameplayInputAction.Gameplay.Explosion.Disable();
+        _gameplayInputAction.Gameplay.Parry.Disable();
     }
 
     void AttachHooks()
     {
         _gameplayInputAction.Gameplay.Jump.performed += OnJump;
-        _gameplayInputAction.Gameplay.Attack.performed += OnAttack;
+        _gameplayInputAction.Gameplay.Attack.started += OnAttack;
+        _gameplayInputAction.Gameplay.Attack.canceled += OnAttack;
         _gameplayInputAction.Gameplay.Dash.performed += OnDash;
-        _gameplayInputAction.Gameplay.Interact.performed += OnInteract;
+        _gameplayInputAction.Gameplay.Interact.started += OnInteract;
         _gameplayInputAction.Gameplay.Explosion.performed += OnExplosion;
+        _gameplayInputAction.Gameplay.Parry.started += OnParry;
+        _gameplayInputAction.Gameplay.Parry.canceled += OnParry;
         _health.onHealthDepleted += HandlePlayerDeath;
     }
 
     void DetachHooks()
     {
         _gameplayInputAction.Gameplay.Jump.performed -= OnJump;
-        _gameplayInputAction.Gameplay.Attack.performed -= OnAttack;
+        _gameplayInputAction.Gameplay.Attack.started -= OnAttack;
+        _gameplayInputAction.Gameplay.Attack.canceled -= OnAttack;
         _gameplayInputAction.Gameplay.Dash.performed -= OnDash;
-        _gameplayInputAction.Gameplay.Interact.performed -= OnInteract;
+        _gameplayInputAction.Gameplay.Interact.started -= OnInteract;
         _gameplayInputAction.Gameplay.Explosion.performed -= OnExplosion;
+        _gameplayInputAction.Gameplay.Parry.started -= OnParry;
+        _gameplayInputAction.Gameplay.Parry.canceled -= OnParry;
         _health.onHealthDepleted -= HandlePlayerDeath;
     }
 
@@ -159,7 +167,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     void OnJump( InputAction.CallbackContext context ) => Jump();
 
-    void OnAttack( InputAction.CallbackContext context ) => Melee();
+    void OnAttack( InputAction.CallbackContext context ) => Melee( context );
 
     void OnDash( InputAction.CallbackContext context ) => Dash();
 
@@ -170,7 +178,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     void OnInteract( InputAction.CallbackContext context ) => Interact();
 
-    void OnParry( InputAction.CallbackContext context ) => Parry();
+    void OnParry( InputAction.CallbackContext context ) => Parry( context );
 
 #endregion
 
@@ -265,11 +273,18 @@ public class PlayerController : MonoBehaviour, IDamagable
         // in here we'll somehow simulate the sliding animation... Should be interesting!
     }
 
-    void Interact() => onPlayerInteract?.Invoke( this );
+    void Interact() 
+    {
+        Debug.Log("The player has pressed interaction");
+        onPlayerInteract?.Invoke( this );
+    }
 
-    void Melee() => onPlayerAttack?.Invoke( this );
+    void Melee( InputAction.CallbackContext context ) => onPlayerAttack?.Invoke( this, context.ReadValue<float>() > 0.5f );
 
-    void Parry() => onPlayerParry?.Invoke( this );
+    void Parry( InputAction.CallbackContext context ) 
+    {
+        onPlayerParry?.Invoke( this, context.ReadValue<float>() > 0.5f );
+    }
 
     void Move()
     {

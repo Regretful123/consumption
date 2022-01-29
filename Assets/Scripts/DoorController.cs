@@ -13,7 +13,7 @@ public abstract class Door : MonoBehaviour
     bool _hasFired = false;
     bool _stayOpen = false;
     public bool IsOpen() => _isOpen;
-    HashSet<InputAction> _inTrigger = new HashSet<InputAction>();
+    HashSet<PlayerController> _inTrigger = new HashSet<PlayerController>();
 
     void Start()
     {
@@ -24,33 +24,30 @@ public abstract class Door : MonoBehaviour
     public virtual void OnOpen() { }
     public virtual void OnClose() { }
 
-    public void OnTriggerEnter2D( Collider2D other )
+    virtual public void OnTriggerEnter2D( Collider2D other )
     {
         if( other.CompareTag("Player"))
         {
-            if( TryGetComponent<PlayerController>(out PlayerController _controller ))
+            if( other.TryGetComponent<PlayerController>(out PlayerController _controller ))
             {
-                InputAction _interact = _controller.GetGamePlayInputAction().Gameplay.Interact;
-                _interact.performed += HandlePlayerInteract;
-                _interact.Enable();
-                _inTrigger.Add( _interact );
+                Debug.Log("Player has enter the trigger");
+                _controller.onPlayerInteract += HandlePlayerInteract;
+                _inTrigger.Add( _controller );
             }
         }
     }
 
-    public void OnTriggerExit2D( Collider2D other )
+    virtual public void OnTriggerExit2D( Collider2D other )
     {
         if( other.CompareTag("Player"))
         {
             // for now handle when the player exit.
-            if( TryGetComponent<PlayerController>(out PlayerController _controller ))
+            if( other.TryGetComponent<PlayerController>(out PlayerController _controller ))
             {
-                InputAction _interact = _controller.GetGamePlayInputAction().Gameplay.Interact;
-                if( _inTrigger.Contains( _interact ))
+                if( _inTrigger.Contains( _controller ))
                 {
-                    _interact.performed -= HandlePlayerInteract;
-                    _interact.Disable();
-                    _inTrigger.Remove( _interact );
+                    _controller.onPlayerInteract -= HandlePlayerInteract;
+                    _inTrigger.Remove( _controller );
                 }
             }
 
@@ -62,8 +59,9 @@ public abstract class Door : MonoBehaviour
         }
     }
 
-    void HandlePlayerInteract(InputAction.CallbackContext context )
+    void HandlePlayerInteract(PlayerController _controller )
     {
+        Debug.Log($"The player has invoke an action!");
         // for now handle when the player enter
         if( !_isOpen && ( ( _fireOnce && !_hasFired ) || ( !_fireOnce ) )  )
         {
@@ -77,7 +75,7 @@ public abstract class Door : MonoBehaviour
     void OnDisable()
     {
         foreach( var target in _inTrigger )
-            target.performed -= HandlePlayerInteract;
+            target.onPlayerInteract -= HandlePlayerInteract;
         _inTrigger.Clear();
     }
 }

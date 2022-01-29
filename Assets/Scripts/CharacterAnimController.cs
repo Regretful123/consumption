@@ -12,8 +12,11 @@ public class CharacterAnimController : MonoBehaviour
     int horizontalHash = Animator.StringToHash("horizontal");
     int verticalHash = Animator.StringToHash("vertical");
     int parryHash = Animator.StringToHash("isParry");
+    int parryLayerId = 0;
     int groundHash = Animator.StringToHash("isGround");
     int attackHash = Animator.StringToHash("isAttacking");
+    int initialParryHash = Animator.StringToHash("ParryRelease");
+    int attackLayerId = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -27,7 +30,8 @@ public class CharacterAnimController : MonoBehaviour
             this.enabled = false;
             return;
         }
-        
+        parryLayerId = _anim.GetLayerIndex("Parry");
+        attackLayerId = _anim.GetLayerIndex("Attack");
         _controller.onPlayerAttack += HandleAttack;
         _controller.onPlayerParry += HandleParry;
         _controller.onPlayerLand += HandleLand;
@@ -46,9 +50,12 @@ public class CharacterAnimController : MonoBehaviour
         }
     }
 
-    private void HandleParry(PlayerController obj)
+    private void HandleParry(PlayerController obj, bool isDefending )
     {
-        _anim.SetBool( parryHash, true );
+        if( isDefending )
+            _anim.SetLayerWeight( parryLayerId, 1f );
+        _anim.SetBool( parryHash, isDefending  );
+        _anim.Play( initialParryHash, parryLayerId );
     }
 
     private void HandlePlayerHealth( int newHealth )
@@ -56,7 +63,11 @@ public class CharacterAnimController : MonoBehaviour
         // maybe a different animation could be played here?
     }
 
-    void HandleAttack( PlayerController obj ) => _anim.SetBool( attackHash, true );
+    void HandleAttack( PlayerController obj, bool isAttacking )
+    {
+        _anim.SetLayerWeight( attackLayerId, 1f );
+        _anim.SetBool( attackHash, isAttacking );
+    } 
 
     void HandleLand(PlayerController obj) => _anim.SetBool( groundHash, true );
 
