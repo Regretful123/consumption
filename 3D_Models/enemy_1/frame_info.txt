@@ -1,14 +1,6 @@
-file:torso_enemy_idle
-idle
-
-file:torso_enemy_walk
-walk
-
-file:torso_enemy_lunge_attack
-attack
-0-15 wind up
-15_30 jump
-30-50 air
-30-0 (reverse) reconect with the ground
-
-
+0-120 idle
+140-180 walk
+190-232 jump
+232-260 air idle
+260-300 ground reconect
+300-360 ground attack

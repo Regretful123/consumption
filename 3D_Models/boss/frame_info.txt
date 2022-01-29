@@ -29,3 +29,7 @@ file:boss_head
 ignore the boss_anim files it was a test 
 in case we where to use the character as a boss 
 with some changes
+
+
+death animation slow down the slam animations a bit so the head and tentacles 
+hit the ground and freeze them in position
