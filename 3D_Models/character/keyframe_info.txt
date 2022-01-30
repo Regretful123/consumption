@@ -3,10 +3,10 @@
 150-170 run stop
 170-210 crouch
 210-230 dash
-240-270 jump
-280-320 falling
+240-280 jump
+290-320 falling
 320-340 falling ground connect
-340-350 parry
+340-353 parry
 350-360 parry recover
 360-380 attack 1
 380-391 attack 2 (combo from attack 1)
@@ -14,5 +14,6 @@
 420-475 light explosion
 475-500 geting hit
 500-525 death
-525-560 intro
+525-560 intro-respawn
+
 
