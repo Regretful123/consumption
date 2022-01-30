@@ -124,6 +124,8 @@ public class AIMachine : StateMachine, IDamagable
 
     public override void FixedUpdate()
     {
+        if( m_target != null && !m_target.gameObject.activeInHierarchy )
+            UnassignTarget();
         GroundCheck();
         currentState?.FixedExecute();
     }
@@ -140,7 +142,11 @@ public class AIMachine : StateMachine, IDamagable
 
 #region private implementation
 
-    void ToMove() => SetState( new Move(this));
+    internal void ToStun() => SetState( new Stun( this ));
+    internal void ToFlee() => SetState( new Flee( this ));
+    internal void ToAttack() => SetState( new Attack( this ));
+    internal void ToChase() => SetState( new Chase( this ));
+    internal void ToMove() => SetState( new Move( this ));
 
     void GroundCheck()
     {
@@ -154,7 +160,7 @@ public class AIMachine : StateMachine, IDamagable
             break;
         }
     }
-
+    
     void HandleAIDeath( Health health )
     {
         // TODO What should happen if the AI is dead?
@@ -165,9 +171,9 @@ public class AIMachine : StateMachine, IDamagable
 
 #region public interface
 
-    public void SetTarget( Transform target ) => this.m_target = target;
-    public void UnassignTarget() => this.m_target = null;
-    public void SetTarget( GameObject target ) => this.m_target = target.transform;
+    public void SetTarget( Transform target ) => m_target = target;
+    public void UnassignTarget() => m_target = null;
+    public void SetTarget( GameObject target ) => m_target = target.transform;
 
     public Transform GetNextWaypoint()
     {
@@ -194,7 +200,11 @@ public class AIMachine : StateMachine, IDamagable
         transform.localScale = scale;
     }
 
-    public void OnHurt(int damages) => SetState( new Hurt(this));
+    public void OnHurt(int damages) 
+    {
+        _health.OnHurt( damages );
+        SetState( new Hurt(this));
+    }
 
     // public void OnHeal(int heal) => SetState( new Move(this));
     public void OnHeal(int heal) { }
@@ -216,7 +226,6 @@ public class AIMachine : StateMachine, IDamagable
     }
 
     #endregion
-
 }
 
 public abstract class AIState : State
@@ -228,11 +237,10 @@ public abstract class AIState : State
 public class Stun : AIState
 {
     public Stun(AIMachine stateMachine) : base(stateMachine) { }
-    void ToMove() => stateMachine.SetState( new Move( stateMachine ));
     public override IEnumerator Init()
     {
         yield return new WaitForSeconds(stateMachine.stunDuration);
-        ToMove();
+        stateMachine.ToMove();
     }
 }
 
@@ -254,13 +262,11 @@ public class Flee : AIState
         }
     }
 
-    void ToMove() => stateMachine.SetState( new Move( stateMachine ));
-
     public override void FixedExecute()
     {
         bool inZone = Vector3.Distance( stateMachine.transform.position, orgPos ) >= stateMachine.fleeRange; 
         if( inZone )
-            ToMove();
+            stateMachine.ToMove();
     }
 }
 
@@ -268,7 +274,6 @@ public class Attack : AIState
 {
     public Attack(AIMachine stateMachine) : base(stateMachine) { }
 
-    void ToChase() => stateMachine.SetState( new Chase( stateMachine ));
     public override IEnumerator Init()
     {
         bool repeat = false;
@@ -281,19 +286,13 @@ public class Attack : AIState
                 repeat = false;
         } 
         while( repeat );
-        ToChase();
+        stateMachine.ToChase();
     }
 }
 
 public class Hurt : AIState
 {
     public Hurt(AIMachine stateMachine ) : base(stateMachine) { }
-
-    void ToStun() => stateMachine.SetState( new Stun( stateMachine ));
-    void ToFlee() => stateMachine.SetState( new Flee( stateMachine ));
-    void ToAttack() => stateMachine.SetState( new Attack( stateMachine ));
-    void ToChase() => stateMachine.SetState( new Chase( stateMachine ));
-    void ToMove() => stateMachine.SetState( new Move( stateMachine ));
 
     bool ShouldFlee() => stateMachine.health.currentHealth <= stateMachine.health.maxHealth * stateMachine.scareFactor 
                         && Random.Range(0f,1f) <= stateMachine.fleeChance; 
@@ -302,12 +301,12 @@ public class Hurt : AIState
     {
         if( stateMachine.canStun )
         {
-            ToStun();
+            stateMachine.ToStun();
             yield break;
         }
         else if( ShouldFlee() )
         {
-            ToFlee();
+            stateMachine.ToFlee();
             yield break;
         }
 
@@ -316,16 +315,16 @@ public class Hurt : AIState
             float distance = Vector3.Distance( stateMachine.transform.position, stateMachine.target.position );
             if( distance <= stateMachine.attackRange )
             {
-                ToAttack();
+                stateMachine.ToAttack();
                 yield break;
             }
             else if( distance <= stateMachine.viewDistance )
             {
-                ToChase();
+                stateMachine.ToChase();
                 yield break;
             }
         }
-        ToMove();
+        stateMachine.ToMove();
         yield break;
     }
 }
@@ -337,29 +336,26 @@ public class Chase : AIState
     {
         speed = stateMachine.chaseSpeed;
         if( stateMachine.target == null )
-            ToMove();
+            stateMachine.ToMove();
     }
-
-    void ToMove() => stateMachine.SetState(new Move(stateMachine));
-    void ToAttack() => stateMachine.SetState( new Attack( stateMachine ));
 
     public override void FixedExecute()
     {
         if( stateMachine.target == null )
         {
-            ToMove(); // would like to implement the lost behavior here.
+            stateMachine.ToMove(); // would like to implement the lost behavior here.
             return;
         }
 
         float dist = Vector3.Distance( stateMachine.transform.position, stateMachine.target.position );
         if( dist < stateMachine.attackRange )
         {
-            ToAttack();
+            stateMachine.ToAttack();
             return;
         }
         else if( dist > stateMachine.viewDistance )
         {
-            ToMove();
+            stateMachine.ToMove();
             return;
         }
         
@@ -375,13 +371,12 @@ public class Move : AIState
 {
     float speed = 0f;
     bool wasGround = true;
-    void ToChase() => stateMachine.SetState( new Chase( stateMachine ));
 
     public override IEnumerator Init()
     {
         speed = stateMachine.speed;
         if( stateMachine.targetVisible )
-            ToChase();
+            stateMachine.ToChase();
         yield break;
     }
 
@@ -402,7 +397,7 @@ public class Move : AIState
         stateMachine.Move(speed);
 
         if( stateMachine.targetVisible )
-            ToChase();
+            stateMachine.ToChase();
     }
 
     public Move(AIMachine stateMachine) : base(stateMachine) { }

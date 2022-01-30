@@ -30,7 +30,6 @@ public abstract class Door : MonoBehaviour
         {
             if( other.TryGetComponent<PlayerController>(out PlayerController _controller ))
             {
-                Debug.Log("Player has enter the trigger");
                 _controller.onPlayerInteract += HandlePlayerInteract;
                 _inTrigger.Add( _controller );
             }
@@ -61,7 +60,6 @@ public abstract class Door : MonoBehaviour
 
     void HandlePlayerInteract(PlayerController _controller )
     {
-        Debug.Log($"The player has invoke an action!");
         // for now handle when the player enter
         if( !_isOpen && ( ( _fireOnce && !_hasFired ) || ( !_fireOnce ) )  )
         {

@@ -50,6 +50,8 @@ public class CharacterAnimController : MonoBehaviour
         }
     }
 
+    void OnAttackDamage() => _controller.ApplyDamage();
+
     private void HandleParry(PlayerController obj, bool isDefending )
     {
         if( isDefending )

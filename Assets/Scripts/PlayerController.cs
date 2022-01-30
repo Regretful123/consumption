@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -12,6 +13,8 @@ public class PlayerController : MonoBehaviour, IDamagable
     [SerializeField, Range(0,1)] float crouchSpeed = 0.4f;
     // [SerializeField] Transform _displayMesh;
     [SerializeField] int startingHealth = 100;
+    [SerializeField] Transform attackPoint;
+    [SerializeField, Range(0.01f, 2f)] float attackRadius = 1f;
 
     bool ground = false;
     bool pauseControl = false;
@@ -19,6 +22,54 @@ public class PlayerController : MonoBehaviour, IDamagable
     bool canStand = true;
     bool wasCrouching = false;
     bool freezeInput = false;
+
+    [SerializeField] bool m_canDash = true;
+    public bool canDash 
+    {
+        get => m_canDash;
+        set 
+        {
+            if( m_canDash == value )
+                return;
+            
+            m_canDash = value;
+            if( m_canDash )
+                _gameplayInputAction.Gameplay.Dash.Enable();
+            else
+                _gameplayInputAction.Gameplay.Dash.Disable();
+        }
+    }
+    [SerializeField] bool m_canJump = true;
+    public bool canJump
+    {
+        get => m_canJump;
+        set
+        {
+            if( m_canJump == value )
+                return;
+            m_canJump = value;
+            if( m_canJump )
+                _gameplayInputAction.Gameplay.Jump.Enable();
+            else
+                _gameplayInputAction.Gameplay.Jump.Disable();
+        }
+    }
+
+    [SerializeField] bool m_canAttack = true;
+    public bool canAttack 
+    {
+        get => m_canAttack;
+        set 
+        {
+            if( m_canAttack == value )
+                return;
+            m_canAttack = value;
+            if( m_canAttack )
+                _gameplayInputAction.Gameplay.Attack.Enable();
+            else
+                _gameplayInputAction.Gameplay.Attack.Disable();
+        }
+    }
 
     [Range(0, 100f)] public float speed = 5f;
 
@@ -30,13 +81,30 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     Health _health;
     public Health health { get => _health; }
+    [SerializeField] int attackDamage = 0;
+
+#region ceiling
 
     [SerializeField, Range(0.01f, 10f)] float ceilingRadius;
-    [SerializeField, Range(0.01f, 5f)] float groundRadius;
     [SerializeField] Transform ceilingDetection;
-    [SerializeField] Transform groundDetection;
-    [SerializeField] LayerMask groundMask;
 
+#endregion
+
+#region ground
+    [SerializeField, Range(0.01f, 5f)] float groundRadius;
+    [SerializeField] Transform groundDetection;
+    const int ignoreRaycastLayer = 2;
+
+#endregion
+
+#region Dash
+
+    [SerializeField, Range(0.01f, 5f)] float dashDistance;
+    [SerializeField] int playerLayer;
+    [SerializeField, Range( 0.01f, 1f)] float dashDuration;
+
+#endregion
+    WaitForFixedUpdate endOfFrame = new WaitForFixedUpdate();
     public Action<PlayerController> onPlayerInteract;
     public Action<PlayerController> onPlayerLand;
     public Action<PlayerController> onPlayerCrouch;
@@ -54,6 +122,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     GamePlayInputAction _gameplayInputAction;
     InputAction _movement;
     bool hasStarted = false;
+    bool hasDash = false;
     public GamePlayInputAction GetGamePlayInputAction() => _gameplayInputAction;
 
 #region Unity event
@@ -93,6 +162,7 @@ public class PlayerController : MonoBehaviour, IDamagable
             Move();
     }
 
+    // for debug stuff
     void OnDrawGizmosSelected()
     {
         if( groundDetection != null )
@@ -106,6 +176,12 @@ public class PlayerController : MonoBehaviour, IDamagable
             Gizmos.color = canStand ? Color.green : Color.red;
             Gizmos.DrawWireSphere( ceilingDetection.position, ceilingRadius );
         }
+
+        if( attackPoint != null )
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere( attackPoint.position, attackRadius );
+        }
     }
 
     #endregion
@@ -115,9 +191,12 @@ public class PlayerController : MonoBehaviour, IDamagable
     void EnableInput()
     {
         _movement.Enable();
-        _gameplayInputAction.Gameplay.Jump.Enable();
-        _gameplayInputAction.Gameplay.Attack.Enable();
-        _gameplayInputAction.Gameplay.Dash.Enable();
+        if( canJump )
+            _gameplayInputAction.Gameplay.Jump.Enable();
+        if( canAttack )
+            _gameplayInputAction.Gameplay.Attack.Enable();
+        if( canDash )
+            _gameplayInputAction.Gameplay.Dash.Enable();
         _gameplayInputAction.Gameplay.Interact.Enable();
         _gameplayInputAction.Gameplay.Explosion.Enable();
         _gameplayInputAction.Gameplay.Parry.Enable();
@@ -160,10 +239,11 @@ public class PlayerController : MonoBehaviour, IDamagable
         _health.onHealthDepleted -= HandlePlayerDeath;
     }
 
+    int playerMask => ( 1 << playerLayer ) | ( 1 << ignoreRaycastLayer );
+
 #endregion
 
-
-    #region Input System Callback
+#region Input System Callback
 
     void OnJump( InputAction.CallbackContext context ) => Jump();
 
@@ -188,24 +268,19 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     void CheckCeiling()
     {
-        // if( crouch )
-        //     return;
-            
         canStand = true;
-        if( Physics2D.OverlapCircle( ceilingDetection.position, ceilingRadius, groundMask))
+        if( Physics2D.OverlapCircle( ceilingDetection.position, ceilingRadius, ~playerMask ))
         {
             canStand = false;
             crouch = true;
         }
     }
 
-
     void CheckGround()
     { 
         bool wasGrounded = ground;
         ground = false;
-
-        Collider2D[] cols = Physics2D.OverlapCircleAll( groundDetection.position, groundRadius, groundMask );
+        Collider2D[] cols = Physics2D.OverlapCircleAll( groundDetection.position, groundRadius, ~playerMask );
         foreach( var col in cols )
         {
             if( col.gameObject != gameObject )
@@ -213,6 +288,7 @@ public class PlayerController : MonoBehaviour, IDamagable
                 ground = true;
                 if( wasGrounded )
                 {
+                    hasDash = false;// reset dash
                     _moveSmooth = landStrafe;
                     onPlayerLand?.Invoke( this );
                 }
@@ -265,7 +341,39 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     void Dash()
     {
-        // in here we'll somehow simulate the dash animation... Should be interesting!
+        // I've imagine teh follow behaviour
+        // when pressed, an animation will play to show sliding across something.
+        // rigidbody will be assigned every frame for the slide.
+        // interpolate between two points.
+        if( !hasDash )
+        {
+            hasDash = true;
+            StartCoroutine( Dashing() );
+        }
+    }
+
+    IEnumerator Dashing()
+    {
+        // initial variables
+        Vector2 orgPos = transform.position;
+        float _t = 0;
+        float dir = transform.localScale.x < 0 ? -1 : 1;
+
+        // check and see if there's a wall in front of the player, stop there instead of going through
+        RaycastHit2D hit = Physics2D.Raycast( orgPos, transform.right * dir, dashDistance, ~playerMask );
+        Vector3 target = orgPos + (Vector2)transform.right * dashDistance;
+        if( hit )
+            target = (Vector2)hit.point - ( (Vector2)transform.right * dir * ( transform.localScale.x / 2 ) ); 
+        
+        // freeze input while we're animating the dash.
+        freezeInput = true;
+        while( _t < 1 )
+        {
+            _t += Time.fixedDeltaTime / dashDuration;
+            _rb.position = Vector3.Lerp( orgPos, target, _t );
+            yield return endOfFrame;
+        }
+        freezeInput = false;
     }
 
     void Slide()
@@ -273,18 +381,11 @@ public class PlayerController : MonoBehaviour, IDamagable
         // in here we'll somehow simulate the sliding animation... Should be interesting!
     }
 
-    void Interact() 
-    {
-        Debug.Log("The player has pressed interaction");
-        onPlayerInteract?.Invoke( this );
-    }
+    void Interact() => onPlayerInteract?.Invoke( this );
 
     void Melee( InputAction.CallbackContext context ) => onPlayerAttack?.Invoke( this, context.ReadValue<float>() > 0.5f );
 
-    void Parry( InputAction.CallbackContext context ) 
-    {
-        onPlayerParry?.Invoke( this, context.ReadValue<float>() > 0.5f );
-    }
+    void Parry( InputAction.CallbackContext context ) => onPlayerParry?.Invoke( this, context.ReadValue<float>() > 0.5f );
 
     void Move()
     {
@@ -312,7 +413,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     {
         if( ground && !crouch )
         {
-            RaycastHit2D hit = Physics2D.CircleCast( groundDetection.position, groundRadius, -transform.up, Mathf.Infinity, groundMask ); 
+            RaycastHit2D hit = Physics2D.CircleCast( groundDetection.position, groundRadius, -transform.up, Mathf.Infinity, ~playerMask ); 
             ground = false;
             Vector2 hitPointNormal = ( (Vector2)groundDetection.position - hit.point ).normalized;
             Vector2 jumpDir = ( Vector2.up + hitPointNormal ).normalized;
@@ -323,6 +424,18 @@ public class PlayerController : MonoBehaviour, IDamagable
     public void OnHurt( int damages ) => _health.OnHurt( damages );
 
     public void OnHeal( int heal ) => _health.OnHeal( heal );
+
+    Collider2D[] cols = new Collider2D[5];
+    public void ApplyDamage()
+    {
+        // received animator to "Damage" attacks.
+        int count = Physics2D.OverlapCircleNonAlloc( attackPoint.position, attackRadius, cols, ~playerMask );
+        for( int i = 0; i<count; ++i )
+        {
+            if( cols[i].TryGetComponent<IDamagable>(out IDamagable _target ))
+                _target.OnHurt( attackDamage );
+        }
+    }
 
     #endregion
 }
