@@ -244,6 +244,9 @@ MonoBehaviour:
   startingHealth: 100
   attackPoint: {fileID: 6585529410897642047}
   attackRadius: 0.406
+  ignoreMask:
+    serializedVersion: 2
+    m_Bits: 260
   m_canDash: 0
   m_canJump: 1
   m_canAttack: 1

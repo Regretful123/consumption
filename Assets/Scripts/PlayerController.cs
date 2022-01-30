@@ -16,6 +16,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     [SerializeField] int startingHealth = 100;
     [SerializeField] Transform attackPoint;
     [SerializeField, Range(0.01f, 2f)] float attackRadius = 1f;
+    [SerializeField] LayerMask ignoreMask;
 
     public bool ground { get; private set; } = false;
     bool pauseControl = false;
@@ -277,7 +278,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     void CheckCeiling()
     {
         canStand = true;
-        if( Physics2D.OverlapCircle( ceilingDetection.position, ceilingRadius, ~playerMask ))
+        if( Physics2D.OverlapCircle( ceilingDetection.position, ceilingRadius, ~( playerMask | ignoreMask ) ))
         {
             canStand = false;
             crouch = true;
@@ -288,7 +289,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     { 
         bool wasGrounded = ground;
         ground = false;
-        Collider2D[] cols = Physics2D.OverlapCircleAll( groundDetection.position, groundRadius, ~playerMask );
+        Collider2D[] cols = Physics2D.OverlapCircleAll( groundDetection.position, groundRadius, ~( playerMask | ignoreMask ) );
         foreach( var col in cols )
         {
             if( col.gameObject != gameObject )
@@ -421,7 +422,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     {
         if( ground && !crouch )
         {
-            RaycastHit2D hit = Physics2D.CircleCast( groundDetection.position, groundRadius, -transform.up, Mathf.Infinity, ~playerMask ); 
+            RaycastHit2D hit = Physics2D.CircleCast( groundDetection.position, groundRadius, -transform.up, Mathf.Infinity, ~( playerMask | ignoreMask ) ); 
             ground = false;
             Vector2 hitPointNormal = ( (Vector2)groundDetection.position - hit.point ).normalized;
             Vector2 jumpDir = ( Vector2.up + hitPointNormal ).normalized;

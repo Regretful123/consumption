@@ -202,6 +202,7 @@ public class AIMachine : StateMachine, IDamagable
     public void OnHurt(int damages) 
     {
         _health.OnHurt( damages );
+        Debug.Log($"Received {damages} damages | {_health.currentHealth} remains!");
         SetState( new Hurt(this));
     }
 
