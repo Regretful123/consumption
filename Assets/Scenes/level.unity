@@ -31743,10 +31743,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 945775150837069933, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 2.43
-      objectReference: {fileID: 0}
     - target: {fileID: 7500360618053478560, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
       propertyPath: m_Name
       value: Player
@@ -31794,14 +31790,6 @@ PrefabInstance:
     - target: {fileID: 7500360618053478564, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500360618053478567, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
-      propertyPath: m_canDash
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7500360618053478567, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
-      propertyPath: attackDamage
-      value: 10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}

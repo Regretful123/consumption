@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class BossMachine : StateMachine, IDamagable
 {
@@ -27,6 +29,8 @@ public class BossMachine : StateMachine, IDamagable
     [SerializeField] Animation m_anim;
     public Collider2D headCollider;
     public Action<BossEvent> OnBossChanged;
+
+    public UnityEvent OnBossDeath;
 
     
     internal float introDuration = 1f;
@@ -106,10 +110,14 @@ public class BossMachine : StateMachine, IDamagable
 
     private void HandleBossDeath(Health obj)
     {
+        OnBossDeath?.Invoke();
         foreach( var col in pieces )
             if( col != null )
                 Destroy( col );
         Destroy(gameObject);
+
+        // according to Norgoroth, send this scene to the credit scene. 
+        SceneManager.LoadScene(0); // TODO change this to credit when we have the scene!
     }
 
     void PlayAnimation(AnimationClip clip )
