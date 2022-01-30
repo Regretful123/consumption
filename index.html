@@ -6,13 +6,13 @@
     <title>Unity WebGL Player | Consumption</title>
   </head>
   <body style="text-align: center">
-    <canvas id="unity-canvas" width=1900 height=1060 style="width: 1900px; height: 1060px; background: #231F20"></canvas>
-    <script src="Build/Builds.loader.js"></script>
+    <canvas id="unity-canvas" width=1280 height=720 style="width: 1280px; height: 720px; background: #231F20"></canvas>
+    <script src="Build/ggj.loader.js"></script>
     <script>
       createUnityInstance(document.querySelector("#unity-canvas"), {
-        dataUrl: "Build/Builds.data.br",
-        frameworkUrl: "Build/Builds.framework.js.br",
-        codeUrl: "Build/Builds.wasm.br",
+        dataUrl: "Build/ggj.data",
+        frameworkUrl: "Build/ggj.framework.js",
+        codeUrl: "Build/ggj.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "GameJam2022Team",
         productName: "Consumption",
