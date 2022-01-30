@@ -35,7 +35,6 @@ public class CharacterAnimController : MonoBehaviour
         _controller.onPlayerAttack += HandleAttack;
         _controller.onPlayerParry += HandleParry;
         _controller.onPlayerLand += HandleLand;
-
         // _controller.onPlayerHealthChanged.AddListener( HandlePlayerHealth );
         // _controller.onPlayerCrouch += HandlePlayerCrouch;
     }
@@ -48,6 +47,14 @@ public class CharacterAnimController : MonoBehaviour
             _controller.onPlayerParry -= HandleParry;
             _controller.onPlayerLand -= HandleLand;
         }
+    }
+
+    void Update()
+    {
+        Vector3 _vel = _controller.velocity;
+        _anim.SetBool( groundHash, _controller.ground );
+        _anim.SetFloat( horizontalHash, Mathf.Abs( _vel.x ) );
+        _anim.SetFloat( verticalHash, _vel.y );
     }
 
     void OnAttackDamage() => _controller.ApplyDamage();

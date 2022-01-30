@@ -16,7 +16,7 @@ public class PlayerController : MonoBehaviour, IDamagable
     [SerializeField] Transform attackPoint;
     [SerializeField, Range(0.01f, 2f)] float attackRadius = 1f;
 
-    bool ground = false;
+    public bool ground { get; private set; } = false;
     bool pauseControl = false;
     bool crouch = false;
     bool canStand = true;
@@ -436,6 +436,8 @@ public class PlayerController : MonoBehaviour, IDamagable
                 _target.OnHurt( attackDamage );
         }
     }
+
+    public Vector3 velocity => _rb.velocity;
 
     #endregion
 }

@@ -147,7 +147,6 @@ public class AIMachine : StateMachine, IDamagable
     internal void ToAttack() => SetState( new Attack( this ));
     internal void ToChase() => SetState( new Chase( this ));
     internal void ToMove() => SetState( new Move( this ));
-
     void GroundCheck()
     {
         ground = false;

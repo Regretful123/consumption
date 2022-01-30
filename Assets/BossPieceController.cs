@@ -39,7 +39,7 @@ public class BossPieceController : MonoBehaviour, IDamagable
 
     void PlayAnimation( AnimationClip clip )
     {
-        if( m_anim == null )
+        if( m_anim == null || m_anim.clip == clip )
             return;
         m_anim.clip = clip;
         m_anim.Play();
@@ -49,6 +49,7 @@ public class BossPieceController : MonoBehaviour, IDamagable
     {
         switch( stateEvent )
         {
+            case BossMachine.BossEvent.Intro : PlayAnimation( introClip ); break;
             case BossMachine.BossEvent.Idle : PlayAnimation( idleClip ); break;
             case BossMachine.BossEvent.Attack : PlayAnimation( attackClip ); break;
             case BossMachine.BossEvent.Recover : PlayAnimation( recoverClip ); break;
