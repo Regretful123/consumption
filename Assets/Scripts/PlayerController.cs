@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D)), DisallowMultipleComponent]
 public class PlayerController : MonoBehaviour, IDamagable
 {
+    Transform checkpoints;
     const float airStrafe = 0.35f;
     const float landStrafe = 0.1f;
     [SerializeField] BoxCollider2D topCollider;
@@ -114,6 +115,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
     public UnityEventInt onPlayerHealthChanged;
     public UnityEvent onPlayerDeath;
+    public UnityEvent onPlayerRespawn;
 
     Rigidbody2D _rb;
     Vector3 _velocity = Vector3.zero;
@@ -132,6 +134,7 @@ public class PlayerController : MonoBehaviour, IDamagable
         _health = new Health( startingHealth );
         _gameplayInputAction  = new GamePlayInputAction();
         _movement = _gameplayInputAction.Gameplay.Move;
+        checkpoints = new GameObject("PlayerCheckPoint").transform;
     }
 
     void Start()
@@ -150,7 +153,12 @@ public class PlayerController : MonoBehaviour, IDamagable
     }
 
     void OnDisable() => DisableInput();
-    void OnDestroy() => DetachHooks();
+    void OnDestroy() 
+    {
+        if( checkpoints != null )
+            Destroy(checkpoints.gameObject);
+        DetachHooks();
+    }
 
     void FixedUpdate()
     {
@@ -438,6 +446,18 @@ public class PlayerController : MonoBehaviour, IDamagable
     }
 
     public Vector3 velocity => _rb.velocity;
+
+    public void SetCheckpoint()
+    {
+        checkpoints.position = transform.position;
+    }
+
+    public void Respawn()
+    {
+        _health.OnHeal( _health.maxHealth );
+        transform.position = checkpoints.position;
+        onPlayerRespawn?.Invoke();
+    }
 
     #endregion
 }
