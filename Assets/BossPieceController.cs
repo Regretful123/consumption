@@ -39,6 +39,7 @@ public class BossPieceController : MonoBehaviour, IDamagable
 
     void PlayAnimation( AnimationClip clip )
     {
+        Debug.Log(clip.name);
         if( m_anim == null || m_anim.clip == clip )
             return;
         m_anim.clip = clip;

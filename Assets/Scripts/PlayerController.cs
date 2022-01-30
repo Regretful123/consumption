@@ -361,7 +361,7 @@ public class PlayerController : MonoBehaviour, IDamagable
 
         // check and see if there's a wall in front of the player, stop there instead of going through
         RaycastHit2D hit = Physics2D.Raycast( orgPos, transform.right * dir, dashDistance, ~playerMask );
-        Vector3 target = orgPos + (Vector2)transform.right * dashDistance;
+        Vector3 target = orgPos + (Vector2)transform.right * dashDistance * dir;
         if( hit )
             target = (Vector2)hit.point - ( (Vector2)transform.right * dir * ( transform.localScale.x / 2 ) ); 
         

@@ -18,10 +18,6 @@ public class BossMachine : StateMachine, IDamagable
 
     Health _health;
     public Health health => throw new System.NotImplementedException();
-    public float idleTime = 1f;
-    public float attackDuration = 2f;
-    // public float stunDuration = 2f;
-    public float roarDuration = 1f;
     public int damages = 10;
     public int initialHealth = 10;
     public BossEvent currentEvent = BossEvent.Intro;
@@ -31,7 +27,11 @@ public class BossMachine : StateMachine, IDamagable
     
     internal float introDuration = 1f;
     internal float recoverDuration = 1f;
-    internal float dyingAnimTime = 1f;
+    internal float dyingDuration = 1f;
+    internal float idleDuration = 1f;
+    internal float attackDuration = 2f;
+    internal float roarDuration = 1f;
+    
 
     [SerializeField] AnimationClip introClip;
     [SerializeField] AnimationClip idleClip;
@@ -68,13 +68,41 @@ public class BossMachine : StateMachine, IDamagable
         if( idleClip != null )
             introDuration = idleClip.length;
         if( dyingClip != null )
-            dyingAnimTime = dyingClip.length;
+            dyingDuration = dyingClip.length;
 
-        idleTime = Mathf.Max( pieceIdleClip.length, idleClip.length );
+        introDuration = Mathf.Max( introClip.length, pieceIntroClip.length );
+        idleDuration = Mathf.Max( pieceIdleClip.length, idleClip.length );
         attackDuration = Mathf.Max( pieceAttackClip.length, attackClip.length );
         recoverDuration = Mathf.Max( pieceRecoveryClip.length, recoverClip.length );
-
+        OnBossChanged += HandleCurrentState;
         ToIntro();
+    }
+
+    void OnDestroy()
+    {
+        OnBossChanged -= HandleCurrentState;
+    }
+
+    void PlayAnimation(AnimationClip clip )
+    {
+        if( m_anim == null || m_anim.clip == clip )
+            return;
+        m_anim.clip = clip;
+        m_anim.Play();
+    }
+
+    void HandleCurrentState( BossEvent evt )
+    {
+        switch( evt )
+        {
+            case BossEvent.Intro : PlayAnimation(introClip); break;
+            case BossEvent.Idle : PlayAnimation(idleClip); break;
+            case BossEvent.Attack : PlayAnimation(attackClip); break;
+            case BossEvent.Recover : PlayAnimation(recoverClip); break;
+            case BossEvent.Roar : PlayAnimation(roarClip); break;
+            case BossEvent.Hurt : PlayAnimation(idleClip); break;
+            case BossEvent.Dead : PlayAnimation(dyingClip);  break;
+        }
     }
 
     void SetState( State newState, BossEvent evt )
@@ -92,9 +120,9 @@ public class BossMachine : StateMachine, IDamagable
 
     void ToIntro() => SetState( new Intro(this), BossEvent.Intro);
     internal void ToIdle() => SetState( new Idle(this), BossEvent.Idle);
-    internal void ToAttack() => SetState( new Idle(this), BossEvent.Attack);
+    internal void ToAttack() => SetState( new Attack(this), BossEvent.Attack);
     internal void ToRecover() => SetState( new Recover(this), BossEvent.Recover );
-    internal void ToRoar() => SetState( new Idle(this), BossEvent.Roar);
+    internal void ToRoar() => SetState( new Roar(this), BossEvent.Roar);
     internal void OnDeath() => SetState( new Dying(this), BossEvent.Dead );
 
     class Idle : BossState
@@ -103,7 +131,7 @@ public class BossMachine : StateMachine, IDamagable
 
         public override IEnumerator Init()
         {
-            yield return new WaitForSeconds( stateMachine.idleTime );
+            yield return new WaitForSeconds( stateMachine.idleDuration );
             float percent = UnityEngine.Random.Range(0f,1f);
             if( percent > 0.5f )
                 stateMachine.ToRoar();
@@ -127,8 +155,6 @@ public class BossMachine : StateMachine, IDamagable
     {
         public Attack(BossMachine stateMachine ) : base(stateMachine) { }
 
-        
-
         public override IEnumerator Init()
         {
             stateMachine.SetHitboxes( true );
@@ -147,18 +173,6 @@ public class BossMachine : StateMachine, IDamagable
             stateMachine.ToIdle();
         }
     }
-
-    // class Hurt : BossState
-    // {
-    //     public Hurt( BossMachine stateMachine ) : base(stateMachine) { }
-
-    //     // guess we'll play some animations here?
-    //     public override IEnumerator Init()
-    //     {
-    //         yield return new WaitForSeconds( stateMachine. );
-    //         stateMachine.ToIdle();
-    //     }
-    // }
     
     class Intro : BossState
     {

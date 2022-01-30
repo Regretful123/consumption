@@ -198,7 +198,7 @@ MonoBehaviour:
   idleClip: {fileID: -998496362607748373, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
   attackClip: {fileID: 6720303635017113406, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
   recoverClip: {fileID: -4738741598103020670, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
-  hurtClip: {fileID: -998496362607748373, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
+  hurtClip: {fileID: -4738338977195520429, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
   dyingClip: {fileID: 7400000, guid: 033ac73200bbcd246be8cdc3e2a71638, type: 2}
 --- !u!61 &269757570
 BoxCollider2D:
@@ -318,7 +318,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.25
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
       propertyPath: m_LocalPosition.y
@@ -326,7 +326,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 9.57
+      value: 15.3
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
       propertyPath: m_LocalRotation.w
@@ -379,7 +379,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.56999993
+      value: -1.98
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1173,10 +1173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f74058e73488cf438a82ed7a9accfec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  idleTime: 0.2
-  attackDuration: 1
-  roarDuration: 0.5
-  damages: 20
+  damages: 30
   initialHealth: 1000
   currentEvent: 0
   pieces:
@@ -1188,7 +1185,7 @@ MonoBehaviour:
   attackClip: {fileID: 6720303635017113406, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
   recoverClip: {fileID: 3546789010798651697, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
   roarClip: {fileID: 7400000, guid: 477431c65a3746142872f8d179876f5d, type: 2}
-  dyingClip: {fileID: 7400000, guid: 5b31a192b5b934f4dbf28662fe740c07, type: 2}
+  dyingClip: {fileID: 7400000, guid: 9d2292d4c916432438026bf6c28ae603, type: 2}
   pieceIntroClip: {fileID: 1827226128182048838, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
   pieceIdleClip: {fileID: -998496362607748373, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
   pieceAttackClip: {fileID: 6720303635017113406, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
@@ -1633,7 +1630,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.56999993
+      value: -1.9799999
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5bd53fa9aacf3df48b86ad7259a823c2, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2211,14 +2208,14 @@ Animation:
   m_GameObject: {fileID: 2104010001}
   m_Enabled: 1
   serializedVersion: 3
-  m_Animation: {fileID: 1827226128182048838, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
+  m_Animation: {fileID: 0}
   m_Animations:
   - {fileID: 6720303635017113406, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
   - {fileID: -1293153098159529243, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
   - {fileID: 1827226128182048838, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
   - {fileID: 3546789010798651697, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
   - {fileID: -998496362607748373, guid: dc6bc94ae3244e8468e921c2ce87ed46, type: 3}
-  - {fileID: 7400000, guid: 5b31a192b5b934f4dbf28662fe740c07, type: 2}
+  - {fileID: 7400000, guid: 9d2292d4c916432438026bf6c28ae603, type: 2}
   - {fileID: 7400000, guid: 477431c65a3746142872f8d179876f5d, type: 2}
   m_WrapMode: 0
   m_PlayAutomatically: 1
@@ -2528,7 +2525,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7500360618053478564, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.46
+      value: 11.19
       objectReference: {fileID: 0}
     - target: {fileID: 7500360618053478564, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
       propertyPath: m_LocalPosition.y
