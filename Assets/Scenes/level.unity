@@ -31123,6 +31123,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7500360618053478567, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
+      propertyPath: playerLayer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7500360618053478567, guid: 0cecf31762a7cce47a19a888de7d9f31, type: 3}
       propertyPath: onPlayerDeath.m_PersistentCalls.m_Calls.Array.size
       value: 4
       objectReference: {fileID: 0}
