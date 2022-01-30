@@ -61,8 +61,8 @@ public class CharacterAnimController : MonoBehaviour
 
     private void HandleParry(PlayerController obj, bool isDefending )
     {
-        if( isDefending )
-            _anim.SetLayerWeight( parryLayerId, 1f );
+        // if( isDefending )
+        //     _anim.SetLayerWeight( parryLayerId, 1f );
         _anim.SetBool( parryHash, isDefending  );
         _anim.Play( initialParryHash, parryLayerId );
     }
@@ -74,7 +74,8 @@ public class CharacterAnimController : MonoBehaviour
 
     void HandleAttack( PlayerController obj, bool isAttacking )
     {
-        _anim.SetLayerWeight( attackLayerId, 1f );
+        // if( isAttacking )
+        //     _anim.SetLayerWeight( attackLayerId, 1f );
         _anim.SetBool( attackHash, isAttacking );
     } 
 

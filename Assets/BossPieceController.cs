@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BossPieceController : MonoBehaviour, IDamagable
+public class BossPieceController : Damagable
 {
-    Health _health; 
     BossMachine m_bossMachine;
-    public Health health => _health;
-    public int initialHealth = 100;
+    [SerializeField] int damages = 10;
     [SerializeField] Animation m_anim;
     [SerializeField] Collider2D attackCollider;
 
@@ -19,9 +17,15 @@ public class BossPieceController : MonoBehaviour, IDamagable
     public AnimationClip hurtClip;
     public AnimationClip dyingClip;
 
-    void Start()
+    override public void Start()
     {
-        _health = new Health( initialHealth );
+        base.Start();
+        health.onHealthDepleted += HandlePieceDeath;
+    }
+
+    private void HandlePieceDeath(Health health)
+    {
+        Destroy(gameObject);
     }
 
     public void Init( BossMachine machine )
@@ -35,6 +39,7 @@ public class BossPieceController : MonoBehaviour, IDamagable
     {
         if( m_bossMachine != null )
             m_bossMachine.OnBossChanged -= HandleBossStateChanged;
+        health.onHealthDepleted -= HandlePieceDeath;
     }
 
     void PlayAnimation( AnimationClip clip )
@@ -43,6 +48,31 @@ public class BossPieceController : MonoBehaviour, IDamagable
             return;
         m_anim.clip = clip;
         m_anim.Play();
+    }
+
+    Collider2D[] cols = new Collider2D[5];
+    void ApplyDamage()
+    {
+        if( attackCollider == null )
+            return;
+
+        Vector2 colPos = attackCollider.transform.position;
+        int count = 0;
+        switch( attackCollider )
+        {
+            case BoxCollider2D box : 
+                count = Physics2D.OverlapBoxNonAlloc( colPos + box.offset, box.size * Vector2.one * 0.2f, 0, cols, m_bossMachine.damageTo ); 
+                break;
+            case CircleCollider2D circle : 
+                count = Physics2D.OverlapCircleNonAlloc( colPos + circle.offset, circle.radius + 0.2f, cols, m_bossMachine.damageTo );
+                break;
+        }
+
+        for( int i = 0; i<count; ++ i )
+        {
+            if( cols[i].TryGetComponent<IDamagable>(out IDamagable _target ))
+                _target.OnHurt( damages );
+        }
     }
 
     private void HandleBossStateChanged(BossMachine.BossEvent stateEvent)
@@ -59,17 +89,20 @@ public class BossPieceController : MonoBehaviour, IDamagable
         }
     }
 
-    public void OnHeal(int heal) { }
-
-    public void OnHurt(int damages)
+    override public void OnHurt( int damages )
     {
+        base.OnHurt(damages);
+        Debug.Log($"tentacle receiving {damages} damages! | {health.currentHealth} remaining");
         m_bossMachine.OnHurt( damages );    // wonder if I need to accumulate enough points for this? or nah? Who knows?
     }
 
     public void SetTriggerStatus(bool isEnable)
     {
         if( attackCollider != null )
+        {
+            if( isEnable )
+                ApplyDamage();
             attackCollider.enabled = isEnable;
+        }
     }
-
 }
