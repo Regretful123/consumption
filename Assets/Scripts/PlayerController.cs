@@ -7,6 +7,8 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D)), DisallowMultipleComponent]
 public class PlayerController : MonoBehaviour, IDamagable
 {
+    private AudioSource soundPlayer;
+    public AudioClip[] soundFX;
     Transform checkpoints;
     const float airStrafe = 0.35f;
     const float landStrafe = 0.1f;
@@ -136,6 +138,7 @@ public class PlayerController : MonoBehaviour, IDamagable
         _gameplayInputAction  = new GamePlayInputAction();
         _movement = _gameplayInputAction.Gameplay.Move;
         checkpoints = new GameObject("PlayerCheckPoint").transform;
+        soundPlayer = GetComponent<AudioSource>();
     }
 
     void Start()
@@ -438,11 +441,16 @@ public class PlayerController : MonoBehaviour, IDamagable
     public void ApplyDamage()
     {
         // received animator to "Damage" attacks.
+        int soundIndex = UnityEngine.Random.Range(0,3);
+        soundPlayer.clip = soundFX[soundIndex];
         int count = Physics2D.OverlapCircleNonAlloc( attackPoint.position, attackRadius, cols, ~playerMask );
         for( int i = 0; i<count; ++i )
         {
-            if( cols[i].TryGetComponent<IDamagable>(out IDamagable _target ))
-                _target.OnHurt( attackDamage );
+            if (cols[i].TryGetComponent<IDamagable>(out IDamagable _target))
+            {
+                soundPlayer.Play();
+                _target.OnHurt(attackDamage);
+            }
         }
     }
 
